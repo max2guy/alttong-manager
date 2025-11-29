@@ -1,6 +1,6 @@
 const CACHE_NAME = 'alttong-manager-v1';
 const urlsToCache = [
-  './alttong-manager.html',
+  './index.html',
   './manifest.json'
 ];
 
@@ -54,7 +54,7 @@ self.addEventListener('fetch', event => {
         });
       })
       .catch(() => {
-        return caches.match('./alttong-manager.html');
+        return caches.match('./index.html');
       })
   );
 });
