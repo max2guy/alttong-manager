@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#667eea">
+    <meta name="description" content="알뜰폰 요금제 관리 및 해지일 알림 앱">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="알뜰폰 관리">
+    <title>알뜰폰 관리 알리미</title>
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>📱</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+            margin: 20px 0;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 28px;
+        }
+
+        .pin-section {
+            background: linear-gradient(135deg, #3742fa 0%, #5352ed 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+        }
+
+        .pin-section h3 {
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .pin-input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .pin-input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .pin-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .pin-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            background: white;
+            color: #3742fa;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .pin-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .pin-info {
+            margin-top: 10px;
+            font-size: 13px;
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+
+        .network-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .network-skt {
+            background: #ff4757;
+            color: white;
+        }
+
+        .network-kt {
+            background: #ff6348;
+            color: white;
+        }
+
+        .network-lgu {
+            background: #e84393;
+            color: white;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        select {
+            cursor: pointer;
+            background: white;
+        }
+
+        select:disabled {
+            background: #f5f5f5;
+            color: #999;
+            cursor: not-allowed;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border: 2px dashed #d0d0d0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .file-input-label:hover {
+            background: #e9ecef;
+            border-color: #667eea;
+        }
+
+        .file-preview {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .file-preview.active {
+            display: block;
+        }
+
+        .preview-item {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid #e0e0e0;
+        }
+
+        .preview-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .preview-content {
+            flex: 1;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .preview-text {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 13px;
+            max-height: 150px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .file-size {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .delete-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .delete-btn:hover {
+            background: #ff3838;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-reset {
+            background: #ff4757;
+            color: white;
+        }
+
+        .btn-reset:hover {
+            background: #ff3838;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4);
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 30px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 600;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .info-value {
+            font-size: 18px;
+            font-weight: 700;
+            text-align: right;
+        }
+
+        .plan-info, .benefits-info {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .alert-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 15px;
+            font-weight: 600;
+            text-align: center;
+            display: none;
+        }
+
+        .alert-danger {
+            background: #ff4757;
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        .alert-warning {
+            background: #ffa502;
+            color: white;
+        }
+
+        .alert-info {
+            background: #3742fa;
+            color: white;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .days-remaining {
+            font-size: 48px;
+            font-weight: 900;
+            text-align: center;
+            margin: 20px 0;
+            color: #667eea;
+        }
+
+        .days-label {
+            text-align: center;
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .save-notice {
+            background: #2ecc71;
+            color: white;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 15px;
+            font-weight: 600;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .storage-status {
+            text-align: center;
+            padding: 10px;
+            font-size: 12px;
+            color: #888;
+            margin-top: 20px;
+        }
+
+        .storage-status.online {
+            color: #2ecc71;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .pin-input-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 알뜰폰 관리 알리미</h1>
+
+        <div class="pin-section">
+            <h3>🔐 온라인 저장 (어디서든 접근 가능)</h3>
+            <div class="pin-input-group">
+                <input type="text" id="pinInput" class="pin-input" placeholder="4자리 PIN 입력" maxlength="4" pattern="[0-9]*">
+                <button class="pin-btn" onclick="loadFromCloud()">불러오기</button>
+            </div>
+            <div class="pin-info">
+                💡 PIN을 기억하시면 다른 기기에서도 데이터를 확인할 수 있습니다.<br>
+                처음 저장 시 자동으로 PIN이 생성됩니다.
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label for="network">통신망</label>
+            <select id="network" onchange="updateMVNOList()">
+                <option value="">선택하세요</option>
+                <option value="SKT">SKT</option>
+                <option value="KT">KT</option>
+                <option value="LGU">LG U+</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label for="mvnoProvider">MVNO 통신사</label>
+            <select id="mvnoProvider" disabled onchange="updatePreview()">
+                <option value="">먼저 통신망을 선택하세요</option>
+            </select>
+        </div>
+        
+        <div class="input-group">
+            <label for="planName">요금제 이름</label>
+            <input type="text" id="planName" placeholder="예: 7GB 데이터 요금제" oninput="updatePreview()">
+        </div>
+
+        <div class="input-group">
+            <label for="planDetails">요금제 상세 정보</label>
+            <textarea id="planDetails" placeholder="예: 
+- 통화: 기본 제공
+- 데이터: 7GB
+- 문자: 기본 제공
+- 특이사항: 7개월 할인" oninput="updatePreview()"></textarea>
+        </div>
+
+        <div class="input-group">
+            <label for="benefits">내가 받을 혜택</label>
+            <textarea id="benefits" placeholder="예:
+- 7개월 할인 (월 5,000원 할인)
+- 가입비 면제
+- 첫 달 무료
+- 데이터 2GB 추가 제공" oninput="updatePreview()"></textarea>
+        </div>
+
+        <div class="input-group">
+            <label>혜택 관련 파일 첨부 (이미지/텍스트)</label>
+            <div class="file-input-wrapper">
+                <input type="file" id="fileInput" accept="image/*,.txt,.doc,.docx,.pdf" multiple onchange="handleFileSelect(event)">
+                <label for="fileInput" class="file-input-label">
+                    📎 파일 선택 (이미지, 텍스트 등)
+                </label>
+            </div>
+            <div id="filePreview" class="file-preview"></div>
+        </div>
+
+        <div class="input-group">
+            <label for="startDate">가입일</label>
+            <input type="date" id="startDate" onchange="updatePreview()">
+        </div>
+
+        <div class="input-group">
+            <label for="discountMonths">할인개월</label>
+            <input type="number" id="discountMonths" placeholder="예: 7" min="0" onchange="updatePreview()">
+        </div>
+
+        <div class="input-group">
+            <label for="monthlyFee">현재 월 사용료 (원)</label>
+            <input type="number" id="monthlyFee" placeholder="예: 9900" min="0" onchange="updatePreview()">
+        </div>
+
+        <div class="button-group">
+            <button class="btn-save" onclick="saveData()">☁️ 온라인 저장</button>
+            <button class="btn-reset" onclick="resetData()">🔄 초기화</button>
+        </div>
+
+        <div class="save-notice" id="saveNotice">✅ 저장되었습니다!</div>
+
+        <div id="results" style="display: none;">
+            <div class="days-remaining" id="daysRemaining">-</div>
+            <div class="days-label">남은 날짜</div>
+
+            <div class="info-box">
+                <div class="plan-info" id="planInfoDisplay" style="display: none;"></div>
+                <div class="benefits-info" id="benefitsDisplay" style="display: none;"></div>
+                <div id="savedFilesDisplay"></div>
+                
+                <div class="info-item">
+                    <span class="info-label">통신망</span>
+                    <span class="info-value" id="displayNetwork">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">MVNO</span>
+                    <span class="info-value" id="displayMVNO">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">가입일</span>
+                    <span class="info-value" id="displayStartDate">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">종료일</span>
+                    <span class="info-value" id="endDate">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">할인개월</span>
+                    <span class="info-value" id="displayDiscount">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">월 사용료</span>
+                    <span class="info-value" id="displayFee">-</span>
+                </div>
+            </div>
+
+            <div class="alert-box" id="alertBox"></div>
+        </div>
+
+        <div class="storage-status" id="storageStatus">💾 로컬 저장 모드</div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+    <script>
+        // Service Worker 등록
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js')
+                    .then(reg => console.log('✅ Service Worker 등록 완료'))
+                    .catch(err => console.log('❌ Service Worker 등록 실패:', err));
+            });
+        }
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDpilSKN7l7ubKTyrIEdmK_ukA_TpgWNP8",
+            authDomain: "alttong-manager-v2.firebaseapp.com",
+            databaseURL: "https://alttong-manager-v2-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "alttong-manager-v2",
+            storageBucket: "alttong-manager-v2.firebasestorage.app",
+            messagingSenderId: "146529111294",
+            appId: "1:146529111294:web:93fff3a092c1c5d72aa9af",
+            measurementId: "G-N3NJQ7H75T"
+        };
+
+        const mvnoList = {
+            SKT: ['헬로모바일', '프리티', '스노우맨', '머천드코리아', '이야기모바일', '에스원', '아이즈비전', '에넥스텔레콤', 'SK7mobile', '우주통신'],
+            KT: ['유니컴즈', '에스로밍', '드림라인', 'KG모빌리언스', '위너스텔', '이마트모바일', '스타벅스모바일', '조이텔', '파인디지털', '모빙'],
+            LGU: ['KCT', 'LG헬로비전', '티플러스', 'CJ헬로모바일', '더블비', '이마트25', '리브모바일', 'U+알뜰모바일']
+        };
+
+        let db, firebaseInitialized = false;
+
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.database();
+            firebaseInitialized = true;
+            console.log('✅ Firebase 초기화 성공');
+            document.getElementById('storageStatus').textContent = '☁️ 온라인 저장 준비 완료';
+            document.getElementById('storageStatus').className = 'storage-status online';
+        } catch (error) {
+            console.log('Firebase 초기화 실패:', error);
+        }
+
+        let attachedFiles = [];
+        let userPIN = localStorage.getItem('userPIN') || '';
+        if (userPIN) document.getElementById('pinInput').value = userPIN;
+
+        window.onload = function() {
+            loadData();
+            updatePreview();
+        };
+
+        function updateMVNOList() {
+            const network = document.getElementById('network').value;
+            const mvnoSelect = document.getElementById('mvnoProvider');
+            mvnoSelect.innerHTML = '';
+            if (!network) {
+                mvnoSelect.disabled = true;
+                mvnoSelect.innerHTML = '<option value="">먼저 통신망을 선택하세요</option>';
+                updatePreview();
+                return;
+            }
+            mvnoSelect.disabled = false;
+            mvnoSelect.innerHTML = '<option value="">선택하세요</option>';
+            mvnoList[network].forEach(provider => {
+                const option = document.createElement('option');
+                option.value = provider;
+                option.textContent = provider;
+                mvnoSelect.appendChild(option);
+            });
+            updatePreview();
+        }
+
+        function generatePIN() {
+            return Math.floor(1000 + Math.random() * 9000).toString();
+        }
+
+        async function saveToCloud(data, pin) {
+            if (!firebaseInitialized) return false;
+            try {
+                await db.ref('users/' + pin).set({ data: data, lastUpdated: new Date().toISOString() });
+                return true;
+            } catch (error) {
+                console.error('클라우드 저장 실패:', error);
+                return false;
+            }
+        }
+
+        async function loadFromCloud() {
+            const pin = document.getElementById('pinInput').value.trim();
+            if (pin.length !== 4) {
+                alert('4자리 PIN을 입력하세요.');
+                return;
+            }
+            if (!firebaseInitialized) {
+                alert('온라인 저장 기능을 사용할 수 없습니다.');
+                loadData();
+                return;
+            }
+            try {
+                const snapshot = await db.ref('users/' + pin).once('value');
+                const cloudData = snapshot.val();
+                if (cloudData && cloudData.data) {
+                    const data = cloudData.data;
+                    document.getElementById('network').value = data.network || '';
+                    updateMVNOList();
+                    document.getElementById('mvnoProvider').value = data.mvnoProvider || '';
+                    document.getElementById('planName').value = data.planName || '';
+                    document.getElementById('planDetails').value = data.planDetails || '';
+                    document.getElementById('benefits').value = data.benefits || '';
+                    document.getElementById('startDate').value = data.startDate || '';
+                    document.getElementById('discountMonths').value = data.discountMonths || '';
+                    document.getElementById('monthlyFee').value = data.monthlyFee || '';
+                    attachedFiles = data.attachedFiles || [];
+                    userPIN = pin;
+                    localStorage.setItem('userPIN', pin);
+                    displayFilePreview();
+                    updatePreview();
+                    alert('✅ 데이터를 불러왔습니다!');
+                    document.getElementById('storageStatus').textContent = '☁️ 온라인 저장 활성화 (PIN: ' + pin + ')';
+                    document.getElementById('storageStatus').className = 'storage-status online';
+                } else {
+                    alert('해당 PIN의 데이터가 없습니다.');
+                }
+            } catch (error) {
+                console.error('데이터 불러오기 실패:', error);
+                alert('데이터 불러오기에 실패했습니다.');
+            }
+        }
+
+        async function saveData() {
+            const data = {
+                network: document.getElementById('network').value,
+                mvnoProvider: document.getElementById('mvnoProvider').value,
+                planName: document.getElementById('planName').value,
+                planDetails: document.getElementById('planDetails').value,
+                benefits: document.getElementById('benefits').value,
+                startDate: document.getElementById('startDate').value,
+                discountMonths: document.getElementById('discountMonths').value,
+                monthlyFee: document.getElementById('monthlyFee').value,
+                attachedFiles: attachedFiles
+            };
+            localStorage.setItem('alttongData', JSON.stringify(data));
+            let pin = document.getElementById('pinInput').value.trim();
+            if (!pin) {
+                pin = generatePIN();
+                document.getElementById('pinInput').value = pin;
+                userPIN = pin;
+                localStorage.setItem('userPIN', pin);
+                alert('🔐 새 PIN이 생성되었습니다: ' + pin + '\n\n이 PIN을 기억하시면 다른 기기에서도 데이터를 불러올 수 있습니다.');
+            }
+            if (firebaseInitialized && pin.length === 4) {
+                const success = await saveToCloud(data, pin);
+                if (success) {
+                    document.getElementById('storageStatus').textContent = '☁️ 온라인 저장 완료 (PIN: ' + pin + ')';
+                    document.getElementById('storageStatus').className = 'storage-status online';
+                } else {
+                    document.getElementById('storageStatus').textContent = '💾 로컬 저장만 완료';
+                }
+            } else {
+                document.getElementById('storageStatus').textContent = '💾 로컬 저장 완료';
+            }
+            const notice = document.getElementById('saveNotice');
+            notice.style.display = 'block';
+            setTimeout(() => { notice.style.display = 'none'; }, 2000);
+        }
+
+        function loadData() {
+            const saved = localStorage.getItem('alttongData');
+            if (saved) {
+                const data = JSON.parse(saved);
+                document.getElementById('network').value = data.network || '';
+                updateMVNOList();
+                document.getElementById('mvnoProvider').value = data.mvnoProvider || '';
+                document.getElementById('planName').value = data.planName || '';
+                document.getElementById('planDetails').value = data.planDetails || '';
+                document.getElementById('benefits').value = data.benefits || '';
+                document.getElementById('startDate').value = data.startDate || '';
+                document.getElementById('discountMonths').value = data.discountMonths || '';
+                document.getElementById('monthlyFee').value = data.monthlyFee || '';
+                attachedFiles = data.attachedFiles || [];
+                displayFilePreview();
+            }
+        }
+
+        function resetData() {
+            if (confirm('모든 데이터를 초기화하시겠습니까?\n\n온라인에 저장된 데이터는 삭제되지 않습니다.')) {
+                localStorage.removeItem('alttongData');
+                document.getElementById('network').value = '';
+                document.getElementById('mvnoProvider').value = '';
+                document.getElementById('mvnoProvider').disabled = true;
+                document.getElementById('planName').value = '';
+                document.getElementById('planDetails').value = '';
+                document.getElementById('benefits').value = '';
+                document.getElementById('startDate').value = '';
+                document.getElementById('discountMonths').value = '';
+                document.getElementById('monthlyFee').value = '';
+                attachedFiles = [];
+                displayFilePreview();
+                document.getElementById('results').style.display = 'none';
+                updateMVNOList();
+            }
+        }
+
+        function handleFileSelect(event) {
+            const files = event.target.files;
+            for (let file of files) {
+                const reader = new FileReader();
+                if (file.type.startsWith('image/')) {
+                    reader.onload = function(e) {
+                        attachedFiles.push({ name: file.name, type: 'image', size: file.size, data: e.target.result });
+                        displayFilePreview();
+                    };
+                    reader.readAsDataURL(file);
+                } else if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
+                    reader.onload = function(e) {
+                        attachedFiles.push({ name: file.name, type: 'text', size: file.size, data: e.target.result });
+                        displayFilePreview();
+                    };
+                    reader.readAsText(file);
+                } else {
+                    attachedFiles.push({ name: file.name, type: 'file', size: file.size, data: null });
+                    displayFilePreview();
+                }
+            }
+            event.target.value = '';
+        }
+
+        function displayFilePreview() {
+            const preview = document.getElementById('filePreview');
+            if (attachedFiles.length === 0) {
+                preview.classList.remove('active');
+                preview.innerHTML = '';
+                return;
+            }
+            preview.classList.add('active');
+            preview.innerHTML = '';
+            attachedFiles.forEach((file, index) => {
+                const item = document.createElement('div');
+                item.className = 'preview-item';
+                const content = document.createElement('div');
+                content.className = 'preview-content';
+                const fileName = document.createElement('div');
+                fileName.className = 'file-name';
+                fileName.textContent = file.name;
+                const fileSize = document.createElement('div');
+                fileSize.className = 'file-size';
+                fileSize.textContent = formatFileSize(file.size);
+                content.appendChild(fileName);
+                content.appendChild(fileSize);
+                if (file.type === 'image' && file.data) {
+                    const img = document.createElement('img');
+                    img.className = 'preview-image';
+                    img.src = file.data;
+                    content.appendChild(img);
+                } else if (file.type === 'text' && file.data) {
+                    const text = document.createElement('div');
+                    text.className = 'preview-text';
+                    text.textContent = file.data.substring(0, 500) + (file.data.length > 500 ? '...' : '');
+                    content.appendChild(text);
+                }
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.textContent = '삭제';
+                deleteBtn.onclick = function() {
+                    attachedFiles.splice(index, 1);
+                    displayFilePreview();
+                };
+                item.appendChild(content);
+                item.appendChild(deleteBtn);
+                preview.appendChild(item);
+            });
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        function updatePreview() {
+            const startDateInput = document.getElementById('startDate').value;
+            const discountMonths = parseInt(document.getElementById('discountMonths').value) || 0;
+            const monthlyFee = parseInt(document.getElementById('monthlyFee').value) || 0;
+            const planName = document.getElementById('planName').value;
+            const planDetails = document.getElementById('planDetails').value;
+            const benefits = document.getElementById('benefits').value;
+            const network = document.getElementById('network').value;
+            const mvnoProvider = document.getElementById('mvnoProvider').value;
+
+            if (!startDateInput) {
+                document.getElementById('results').style.display = 'none';
+                return;
+            }
+
+            const startDate = new Date(startDateInput);
+            const endDate = new Date(startDate);
+            endDate.setMonth(endDate.getMonth() + 7);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const diffTime = endDate - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            document.getElementById('results').style.display = 'block';
+            
+            if (network) {
+                const networkName = network === 'SKT' ? 'SKT' : network === 'KT' ? 'KT' : 'LG U+';
+                const networkBadgeClass = network === 'SKT' ? 'network-skt' : network === 'KT' ? 'network-kt' : 'network-lgu';
+                document.getElementById('displayNetwork').innerHTML = '<span class="network-badge ' + networkBadgeClass + '">' + networkName + '</span>';
+            } else {
+                document.getElementById('displayNetwork').textContent = '-';
+            }
+
+            if (mvnoProvider) {
+                document.getElementById('displayMVNO').textContent = mvnoProvider;
+            } else {
+                document.getElementById('displayMVNO').textContent = '-';
+            }
+            
+            const planInfoDisplay = document.getElementById('planInfoDisplay');
+            if (planName || planDetails) {
+                let planText = '';
+                if (planName) planText += `📋 ${planName}\n`;
+                if (planDetails) planText += planDetails;
+                planInfoDisplay.textContent = planText;
+                planInfoDisplay.style.display = 'block';
+            } else {
+                planInfoDisplay.style.display = 'none';
+            }
+
+            const benefitsDisplay = document.getElementById('benefitsDisplay');
+            if (benefits) {
+                benefitsDisplay.textContent = `🎁 받을 혜택\n${benefits}`;
+                benefitsDisplay.style.display = 'block';
+            } else {
+                benefitsDisplay.style.display = 'none';
+            }
+
+            const savedFilesDisplay = document.getElementById('savedFilesDisplay');
+            if (attachedFiles.length > 0) {
+                savedFilesDisplay.innerHTML = '';
+                attachedFiles.forEach(file => {
+                    if (file.type === 'image' && file.data) {
+                        const img = document.createElement('img');
+                        img.className = 'preview-image';
+                        img.src = file.data;
+                        img.style.marginBottom = '10px';
+                        savedFilesDisplay.appendChild(img);
+                    } else if (file.type === 'text' && file.data) {
+                        const textDiv = document.createElement('div');
+                        textDiv.className = 'preview-text';
+                        textDiv.textContent = file.data;
+                        textDiv.style.marginBottom = '10px';
+                        savedFilesDisplay.appendChild(textDiv);
+                    }
+                });
+            } else {
+                savedFilesDisplay.innerHTML = '';
+            }
+            
+            document.getElementById('displayStartDate').textContent = formatDate(startDate);
+            document.getElementById('endDate').textContent = formatDate(endDate);
+            document.getElementById('displayDiscount').textContent = discountMonths + '개월';
+            document.getElementById('displayFee').textContent = monthlyFee.toLocaleString() + '원';
+
+            const daysRemainingEl = document.getElementById('daysRemaining');
+            if (diffDays < 0) {
+                daysRemainingEl.textContent = '종료됨';
+                daysRemainingEl.style.color = '#ff4757';
+            } else {
+                daysRemainingEl.textContent = diffDays + '일';
+                daysRemainingEl.style.color = '#667eea';
+            }
+
+            const alertBox = document.getElementById('alertBox');
+            if (diffDays < 0) {
+                alertBox.className = 'alert-box alert-danger';
+                alertBox.textContent = '⚠️ 계약이 종료되었습니다. 해지하세요!';
+                alertBox.style.display = 'block';
+            } else if (diffDays <= 7) {
+                alertBox.className = 'alert-box alert-danger';
+                alertBox.textContent = '🚨 종료일이 7일 이내입니다! 해지 준비하세요!';
+                alertBox.style.display = 'block';
+            } else if (diffDays <= 30) {
+                alertBox.className = 'alert-box alert-warning';
+                alertBox.textContent = '⚡ 종료일이 30일 이내입니다. 곧 해지하셔야 합니다.';
+                alertBox.style.display = 'block';
+            } else if (diffDays <= 60) {
+                alertBox.className = 'alert-box alert-info';
+                alertBox.textContent = '📅 종료일이 60일 이내입니다. 해지 일정을 확인하세요.';
+                alertBox.style.display = 'block';
+            } else {
+                alertBox.style.display = 'none';
+            }
+        }
+
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}.${month}.${day}`;
+        }
+    </script>
+</body>
+</html>
