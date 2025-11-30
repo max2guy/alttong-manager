@@ -235,22 +235,25 @@
 
         .preview-image {
             max-width: 100%;
-            max-height: 200px;
-            border-radius: 8px;
+            max-height: 300px;
+            border-radius: 15px;
             margin-top: 10px;
+            border: 2px solid #e0e0e0;
         }
 
         .preview-text {
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 6px;
-            margin-top: 10px;
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            margin-top: 20px;
             font-family: monospace;
             font-size: 13px;
-            max-height: 150px;
+            max-height: 200px;
             overflow-y: auto;
             white-space: pre-wrap;
             word-wrap: break-word;
+            border: 2px solid #e0e0e0;
+            color: #333;
         }
 
         .file-name {
@@ -351,13 +354,21 @@
         }
 
         .plan-info, .benefits-info {
-            background: rgba(255, 255, 255, 0.15);
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 15px;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
             font-size: 14px;
             line-height: 1.6;
             white-space: pre-wrap;
+            border: 2px solid #e0e0e0;
+            color: #333;
+        }
+
+        .plan-info h4, .benefits-info h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 16px;
         }
 
         .alert-box {
@@ -434,10 +445,28 @@
             font-size: 12px;
             color: #888;
             margin-top: 20px;
+            margin-bottom: 20px;
         }
 
         .storage-status.online {
             color: #2ecc71;
+        }
+
+        .edit-btn {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .edit-btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
         }
 
         .summary-card {
@@ -555,92 +584,101 @@
     <div class="container">
         <h1>📱 알뜰폰 관리 알리미</h1>
 
-        <div class="pin-section">
-            <h3>🔐 온라인 저장 (어디서든 접근 가능)</h3>
-            <div class="pin-input-group">
-                <input type="text" id="pinInput" class="pin-input" placeholder="4자리 PIN 입력" maxlength="4" pattern="[0-9]*">
-                <button class="pin-btn" onclick="loadFromCloud()">불러오기</button>
+        <div id="inputSection">
+            <div class="pin-section">
+                <h3>🔐 온라인 저장 (어디서든 접근 가능)</h3>
+                <div class="pin-input-group">
+                    <input type="text" id="pinInput" class="pin-input" placeholder="4자리 PIN 입력" maxlength="4" pattern="[0-9]*">
+                    <button class="pin-btn" onclick="loadFromCloud()">불러오기</button>
+                </div>
+                <div class="pin-info">
+                    💡 PIN을 기억하시면 다른 기기에서도 데이터를 확인할 수 있습니다.<br>
+                    처음 저장 시 자동으로 PIN이 생성됩니다.
+                </div>
             </div>
-            <div class="pin-info">
-                💡 PIN을 기억하시면 다른 기기에서도 데이터를 확인할 수 있습니다.<br>
-                처음 저장 시 자동으로 PIN이 생성됩니다.
+
+            <div class="input-group">
+                <label for="network">통신망</label>
+                <select id="network" onchange="updateMVNOList()">
+                    <option value="">선택하세요</option>
+                    <option value="SKT">SKT</option>
+                    <option value="KT">KT</option>
+                    <option value="LGU">LG U+</option>
+                </select>
             </div>
-        </div>
 
-        <div class="input-group">
-            <label for="network">통신망</label>
-            <select id="network" onchange="updateMVNOList()">
-                <option value="">선택하세요</option>
-                <option value="SKT">SKT</option>
-                <option value="KT">KT</option>
-                <option value="LGU">LG U+</option>
-            </select>
-        </div>
+            <div class="input-group">
+                <label for="mvnoProvider">MVNO 통신사</label>
+                <select id="mvnoProvider" disabled onchange="updatePreview()">
+                    <option value="">먼저 통신망을 선택하세요</option>
+                </select>
+            </div>
+            
+            <div class="input-group">
+                <label for="planName">요금제 이름</label>
+                <input type="text" id="planName" placeholder="예: 7GB 데이터 요금제" oninput="updatePreview()">
+            </div>
 
-        <div class="input-group">
-            <label for="mvnoProvider">MVNO 통신사</label>
-            <select id="mvnoProvider" disabled onchange="updatePreview()">
-                <option value="">먼저 통신망을 선택하세요</option>
-            </select>
-        </div>
-        
-        <div class="input-group">
-            <label for="planName">요금제 이름</label>
-            <input type="text" id="planName" placeholder="예: 7GB 데이터 요금제" oninput="updatePreview()">
-        </div>
-
-        <div class="input-group">
-            <label for="planDetails">요금제 상세 정보</label>
-            <textarea id="planDetails" placeholder="예: 
+            <div class="input-group">
+                <label for="planDetails">요금제 상세 정보</label>
+                <textarea id="planDetails" placeholder="예: 
 - 통화: 기본 제공
 - 데이터: 7GB
 - 문자: 기본 제공
 - 특이사항: 7개월 할인" oninput="updatePreview()"></textarea>
-        </div>
+            </div>
 
-        <div class="input-group">
-            <label for="benefits">내가 받을 혜택</label>
-            <textarea id="benefits" placeholder="예:
+            <div class="input-group">
+                <label for="benefits">내가 받을 혜택</label>
+                <textarea id="benefits" placeholder="예:
 - 7개월 할인 (월 5,000원 할인)
 - 가입비 면제
 - 첫 달 무료
 - 데이터 2GB 추가 제공" oninput="updatePreview()"></textarea>
-        </div>
-
-        <div class="input-group">
-            <label>혜택 관련 파일 첨부 (이미지/텍스트)</label>
-            <div class="file-input-wrapper">
-                <input type="file" id="fileInput" accept="image/*,.txt,.doc,.docx,.pdf" multiple onchange="handleFileSelect(event)">
-                <label for="fileInput" class="file-input-label">
-                    📎 파일 선택 (이미지, 텍스트 등)
-                </label>
             </div>
-            <div id="filePreview" class="file-preview"></div>
-        </div>
 
-        <div class="input-group">
-            <label for="startDate">가입일</label>
-            <input type="date" id="startDate" onchange="updatePreview()">
-        </div>
+            <div class="input-group">
+                <label>혜택 관련 파일 첨부 (이미지/텍스트)</label>
+                <div class="file-input-wrapper">
+                    <input type="file" id="fileInput" accept="image/*,.txt,.doc,.docx,.pdf" multiple onchange="handleFileSelect(event)">
+                    <label for="fileInput" class="file-input-label">
+                        📎 파일 선택 (이미지, 텍스트 등)
+                    </label>
+                </div>
+                <div id="filePreview" class="file-preview"></div>
+            </div>
 
-        <div class="input-group">
-            <label for="discountMonths">할인기간</label>
-            <input type="number" id="discountMonths" placeholder="예: 7개월" min="0" onchange="updatePreview()">
-        </div>
+            <div class="input-group">
+                <label for="startDate">가입일</label>
+                <input type="date" id="startDate" onchange="updatePreview()">
+            </div>
 
-        <div class="input-group">
-            <label for="monthlyFee">현재 월 사용료 (원)</label>
-            <input type="number" id="monthlyFee" placeholder="예: 13000" min="0" onchange="updatePreview()">
-        </div>
+            <div class="input-group">
+                <label for="discountMonths">할인기간</label>
+                <input type="number" id="discountMonths" placeholder="예: 7개월" min="0" onchange="updatePreview()">
+            </div>
 
-        <div class="button-group">
-            <button class="btn-save" onclick="saveData()">☁️ 온라인 저장</button>
-            <button class="btn-reset" onclick="resetData()">🔄 초기화</button>
-        </div>
+            <div class="input-group">
+                <label for="monthlyFee">현재 월 사용료 (원)</label>
+                <input type="number" id="monthlyFee" placeholder="예: 13000" min="0" onchange="updatePreview()">
+            </div>
 
-        <div class="save-notice" id="saveNotice">✅ 저장되었습니다!</div>
+            <div class="button-group">
+                <button class="btn-save" onclick="saveData()">☁️ 온라인 저장</button>
+                <button class="btn-reset" onclick="resetData()">🔄 초기화</button>
+            </div>
+
+            <div class="save-notice" id="saveNotice">✅ 저장되었습니다!</div>
+            
+            <div class="storage-status" id="storageStatus">💾 로컬 저장 모드</div>
+        </div>
 
         <div id="results" style="display: none;">
+            <!-- 수정 버튼 -->
+            <div style="text-align: right; margin-bottom: 15px;">
+                <button onclick="showInputForm()" class="edit-btn">✏️ 수정하기</button>
+            </div>
+
             <!-- 요약 카드 -->
             <div class="summary-card">
                 <div class="summary-card-header">
@@ -682,36 +720,12 @@
             <div class="days-remaining" id="daysRemaining">-</div>
             <div class="days-label">남은 날짜</div>
 
-            <div class="info-box">
-                <div class="plan-info" id="planInfoDisplay" style="display: none;"></div>
-                <div class="benefits-info" id="benefitsDisplay" style="display: none;"></div>
-                <div id="savedFilesDisplay"></div>
-                
-                <div class="info-item">
-                    <span class="info-label">통신망</span>
-                    <span class="info-value" id="displayNetwork">-</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">MVNO</span>
-                    <span class="info-value" id="displayMVNO">-</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">가입일</span>
-                    <span class="info-value" id="displayStartDate">-</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">종료일</span>
-                    <span class="info-value" id="endDate">-</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">할인기간</span>
-                    <span class="info-value" id="displayDiscount">-</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">월 사용료</span>
-                    <span class="info-value" id="displayFee">-</span>
-                </div>
-            </div>
+            <!-- 요금제 상세 및 혜택 정보 -->
+            <div class="plan-info" id="planInfoDisplay" style="display: none;"></div>
+            <div class="benefits-info" id="benefitsDisplay" style="display: none;"></div>
+            
+            <!-- 첨부 파일 -->
+            <div id="savedFilesDisplay"></div>
 
             <div class="alert-box" id="alertBox"></div>
         </div>
@@ -805,6 +819,11 @@
             loadData();
             updatePreview();
         };
+
+        function showInputForm() {
+            document.getElementById('inputSection').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+        }
 
         function updateMVNOList() {
             const network = document.getElementById('network').value;
@@ -954,6 +973,7 @@
                 attachedFiles = [];
                 displayFilePreview();
                 document.getElementById('results').style.display = 'none';
+                document.getElementById('inputSection').style.display = 'block';
                 updateMVNOList();
             }
         }
@@ -1048,6 +1068,7 @@
 
             if (!startDateInput) {
                 document.getElementById('results').style.display = 'none';
+                document.getElementById('inputSection').style.display = 'block';
                 return;
             }
 
@@ -1064,6 +1085,8 @@
             const diffTime = endDate - today;
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
+            // 입력 폼 숨기고 결과만 표시
+            document.getElementById('inputSection').style.display = 'none';
             document.getElementById('results').style.display = 'block';
             
             // 요약 카드 업데이트
@@ -1072,20 +1095,15 @@
                 const networkBadgeClass = network === 'SKT' ? 'network-skt' : network === 'KT' ? 'network-kt' : 'network-lgu';
                 document.getElementById('summaryNetwork').textContent = networkName;
                 document.getElementById('summaryNetwork').className = 'summary-network-badge ' + networkBadgeClass;
-                
-                document.getElementById('displayNetwork').innerHTML = '<span class="network-badge ' + networkBadgeClass + '">' + networkName + '</span>';
             } else {
                 document.getElementById('summaryNetwork').textContent = '-';
-                document.getElementById('displayNetwork').textContent = '-';
             }
 
             // MVNO 표시
             if (mvnoProvider) {
                 document.getElementById('summaryMVNO').textContent = mvnoProvider;
-                document.getElementById('displayMVNO').textContent = mvnoProvider;
             } else {
                 document.getElementById('summaryMVNO').textContent = '-';
-                document.getElementById('displayMVNO').textContent = '-';
             }
             
             // 요금제 이름 표시
@@ -1101,8 +1119,6 @@
             // 날짜 표시
             document.getElementById('summaryStartDate').textContent = formatDate(startDate);
             document.getElementById('summaryEndDate').textContent = formatDate(endDate);
-            document.getElementById('displayStartDate').textContent = formatDate(startDate);
-            document.getElementById('endDate').textContent = formatDate(endDate);
             
             // 할인기간 표시 (개월수 + 종료일)
             let discountText = discountMonths + '개월';
@@ -1110,31 +1126,29 @@
                 discountText += ' (' + formatDate(discountEndDate) + '까지)';
             }
             document.getElementById('summaryDiscount').textContent = discountText;
-            document.getElementById('displayDiscount').textContent = discountText;
             
             // 월 사용료 표시
             document.getElementById('summaryFee').textContent = monthlyFee.toLocaleString() + '원';
-            document.getElementById('displayFee').textContent = monthlyFee.toLocaleString() + '원';
             
+            // 요금제 상세 정보 (카드 아래)
             const planInfoDisplay = document.getElementById('planInfoDisplay');
-            if (planName || planDetails) {
-                let planText = '';
-                if (planName) planText += `📋 ${planName}\n`;
-                if (planDetails) planText += planDetails;
-                planInfoDisplay.textContent = planText;
+            if (planDetails) {
+                planInfoDisplay.innerHTML = '<h4>📋 요금제 상세 정보</h4>' + planDetails;
                 planInfoDisplay.style.display = 'block';
             } else {
                 planInfoDisplay.style.display = 'none';
             }
 
+            // 혜택 정보 (카드 아래)
             const benefitsDisplay = document.getElementById('benefitsDisplay');
             if (benefits) {
-                benefitsDisplay.textContent = `🎁 받을 혜택\n${benefits}`;
+                benefitsDisplay.innerHTML = '<h4>🎁 받을 혜택</h4>' + benefits;
                 benefitsDisplay.style.display = 'block';
             } else {
                 benefitsDisplay.style.display = 'none';
             }
 
+            // 첨부 파일 (카드 아래)
             const savedFilesDisplay = document.getElementById('savedFilesDisplay');
             if (attachedFiles.length > 0) {
                 savedFilesDisplay.innerHTML = '';
@@ -1143,12 +1157,14 @@
                         const img = document.createElement('img');
                         img.className = 'preview-image';
                         img.src = file.data;
+                        img.style.marginTop = '20px';
                         img.style.marginBottom = '10px';
                         savedFilesDisplay.appendChild(img);
                     } else if (file.type === 'text' && file.data) {
                         const textDiv = document.createElement('div');
                         textDiv.className = 'preview-text';
                         textDiv.textContent = file.data;
+                        textDiv.style.marginTop = '20px';
                         textDiv.style.marginBottom = '10px';
                         savedFilesDisplay.appendChild(textDiv);
                     }
