@@ -440,6 +440,78 @@
             color: #2ecc71;
         }
 
+        .summary-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 30px;
+            color: white;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .summary-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .summary-card-title {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .summary-network-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .summary-network-badge.network-skt {
+            background: rgba(255, 71, 87, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .summary-network-badge.network-kt {
+            background: rgba(255, 99, 72, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .summary-network-badge.network-lgu {
+            background: rgba(232, 67, 147, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .summary-row:last-child {
+            border-bottom: none;
+        }
+
+        .summary-label {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .summary-value {
+            font-size: 32px;
+            font-weight: 700;
+            text-align: right;
+            line-height: 1.2;
+        }
+
+        .summary-value.plan-name {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
         @media (max-width: 600px) {
             .container {
                 padding: 25px;
@@ -455,6 +527,26 @@
 
             .pin-input-group {
                 flex-direction: column;
+            }
+
+            .summary-card {
+                padding: 20px;
+            }
+
+            .summary-card-title {
+                font-size: 18px;
+            }
+
+            .summary-value {
+                font-size: 24px;
+            }
+
+            .summary-value.plan-name {
+                font-size: 16px;
+            }
+
+            .summary-label {
+                font-size: 14px;
             }
         }
     </style>
@@ -532,13 +624,13 @@
         </div>
 
         <div class="input-group">
-            <label for="discountMonths">할인개월</label>
-            <input type="number" id="discountMonths" placeholder="예: 7" min="0" onchange="updatePreview()">
+            <label for="discountMonths">할인기간</label>
+            <input type="number" id="discountMonths" placeholder="예: 7개월" min="0" onchange="updatePreview()">
         </div>
 
         <div class="input-group">
             <label for="monthlyFee">현재 월 사용료 (원)</label>
-            <input type="number" id="monthlyFee" placeholder="예: 9900" min="0" onchange="updatePreview()">
+            <input type="number" id="monthlyFee" placeholder="예: 13000" min="0" onchange="updatePreview()">
         </div>
 
         <div class="button-group">
@@ -549,6 +641,44 @@
         <div class="save-notice" id="saveNotice">✅ 저장되었습니다!</div>
 
         <div id="results" style="display: none;">
+            <!-- 요약 카드 -->
+            <div class="summary-card">
+                <div class="summary-card-header">
+                    <div class="summary-card-title">통신망</div>
+                    <div id="summaryNetwork" class="summary-network-badge">-</div>
+                </div>
+                
+                <div class="summary-row">
+                    <div class="summary-label">MVNO</div>
+                    <div class="summary-value" id="summaryMVNO">-</div>
+                </div>
+                
+                <div class="summary-row" id="summaryPlanRow" style="display: none;">
+                    <div class="summary-label">요금제 이름</div>
+                    <div class="summary-value" id="summaryPlanName">-</div>
+                </div>
+                
+                <div class="summary-row">
+                    <div class="summary-label">가입일</div>
+                    <div class="summary-value" id="summaryStartDate">-</div>
+                </div>
+                
+                <div class="summary-row">
+                    <div class="summary-label">종료일</div>
+                    <div class="summary-value" id="summaryEndDate">-</div>
+                </div>
+                
+                <div class="summary-row">
+                    <div class="summary-label">할인기간</div>
+                    <div class="summary-value" id="summaryDiscount">-</div>
+                </div>
+                
+                <div class="summary-row">
+                    <div class="summary-label">월 사용료</div>
+                    <div class="summary-value" id="summaryFee">-</div>
+                </div>
+            </div>
+
             <div class="days-remaining" id="daysRemaining">-</div>
             <div class="days-label">남은 날짜</div>
 
@@ -574,7 +704,7 @@
                     <span class="info-value" id="endDate">-</span>
                 </div>
                 <div class="info-item">
-                    <span class="info-label">할인개월</span>
+                    <span class="info-label">할인기간</span>
                     <span class="info-value" id="displayDiscount">-</span>
                 </div>
                 <div class="info-item">
@@ -924,6 +1054,11 @@
             const startDate = new Date(startDateInput);
             const endDate = new Date(startDate);
             endDate.setMonth(endDate.getMonth() + 7);
+            
+            // 할인기간 종료일 계산
+            const discountEndDate = new Date(startDate);
+            discountEndDate.setMonth(discountEndDate.getMonth() + discountMonths);
+            
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             const diffTime = endDate - today;
@@ -931,19 +1066,55 @@
 
             document.getElementById('results').style.display = 'block';
             
+            // 요약 카드 업데이트
             if (network) {
                 const networkName = network === 'SKT' ? 'SKT' : network === 'KT' ? 'KT' : 'LG U+';
                 const networkBadgeClass = network === 'SKT' ? 'network-skt' : network === 'KT' ? 'network-kt' : 'network-lgu';
+                document.getElementById('summaryNetwork').textContent = networkName;
+                document.getElementById('summaryNetwork').className = 'summary-network-badge ' + networkBadgeClass;
+                
                 document.getElementById('displayNetwork').innerHTML = '<span class="network-badge ' + networkBadgeClass + '">' + networkName + '</span>';
             } else {
+                document.getElementById('summaryNetwork').textContent = '-';
                 document.getElementById('displayNetwork').textContent = '-';
             }
 
+            // MVNO 표시
             if (mvnoProvider) {
+                document.getElementById('summaryMVNO').textContent = mvnoProvider;
                 document.getElementById('displayMVNO').textContent = mvnoProvider;
             } else {
+                document.getElementById('summaryMVNO').textContent = '-';
                 document.getElementById('displayMVNO').textContent = '-';
             }
+            
+            // 요금제 이름 표시
+            if (planName) {
+                document.getElementById('summaryPlanRow').style.display = 'flex';
+                const planNameEl = document.getElementById('summaryPlanName');
+                planNameEl.textContent = planName;
+                planNameEl.className = 'summary-value plan-name';
+            } else {
+                document.getElementById('summaryPlanRow').style.display = 'none';
+            }
+            
+            // 날짜 표시
+            document.getElementById('summaryStartDate').textContent = formatDate(startDate);
+            document.getElementById('summaryEndDate').textContent = formatDate(endDate);
+            document.getElementById('displayStartDate').textContent = formatDate(startDate);
+            document.getElementById('endDate').textContent = formatDate(endDate);
+            
+            // 할인기간 표시 (개월수 + 종료일)
+            let discountText = discountMonths + '개월';
+            if (discountMonths > 0) {
+                discountText += ' (' + formatDate(discountEndDate) + '까지)';
+            }
+            document.getElementById('summaryDiscount').textContent = discountText;
+            document.getElementById('displayDiscount').textContent = discountText;
+            
+            // 월 사용료 표시
+            document.getElementById('summaryFee').textContent = monthlyFee.toLocaleString() + '원';
+            document.getElementById('displayFee').textContent = monthlyFee.toLocaleString() + '원';
             
             const planInfoDisplay = document.getElementById('planInfoDisplay');
             if (planName || planDetails) {
@@ -985,11 +1156,6 @@
             } else {
                 savedFilesDisplay.innerHTML = '';
             }
-            
-            document.getElementById('displayStartDate').textContent = formatDate(startDate);
-            document.getElementById('endDate').textContent = formatDate(endDate);
-            document.getElementById('displayDiscount').textContent = discountMonths + '개월';
-            document.getElementById('displayFee').textContent = monthlyFee.toLocaleString() + '원';
 
             const daysRemainingEl = document.getElementById('daysRemaining');
             if (diffDays < 0) {
