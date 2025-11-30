@@ -1,4 +1,4 @@
-const CACHE_NAME = 'alttong-manager-v1';
+const CACHE_NAME = 'alttong-manager-v2';
 const urlsToCache = [
   './index.html',
   './manifest.json'
