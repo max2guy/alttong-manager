@@ -1,5 +1,5 @@
-// ★ [중요] 앱 버전 5.0
-const APP_VERSION = '5.0';
+// ★ [중요] 앱 버전 5.1
+const APP_VERSION = '5.1';
 
 const firebaseConfig = {
     apiKey: "AIzaSyDpilSKN7l7ubKTyrIEdmK_ukA_TpgWNP8",
@@ -12,7 +12,6 @@ const firebaseConfig = {
     measurementId: "G-N3NJQ7H75T"
 };
 
-// [전체 목록 유지]
 const mvnoList = {
     SKT: [
         'SK세븐모바일', '헬로모바일', '프리티', '스마텔', '티플러스', '리브모바일', '토스모바일',
@@ -44,7 +43,7 @@ const app = {
     init: function() {
         console.log('App Initializing... v' + APP_VERSION);
         
-        // 화면에 버전 표시
+        // JS가 로드되면 버전을 덮어씀 (확인용)
         document.querySelectorAll('.app-version').forEach(el => el.innerText = APP_VERSION);
 
         try {
@@ -78,7 +77,6 @@ const app = {
     },
 
     addEventListeners: function() {
-        // 강제 새로고침
         document.getElementById('btnHardRefresh')?.addEventListener('click', () => this.hardRefresh());
 
         const networkSelect = document.getElementById('network');
