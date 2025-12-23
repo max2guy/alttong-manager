@@ -1,4 +1,4 @@
-const CACHE_NAME = 'alttong-v6.0-final';
+const CACHE_NAME = 'v6.2';
 const ASSETS = [
   './',
   './index.html?v=6.0',
@@ -32,3 +32,4 @@ self.addEventListener('fetch', event => {
     caches.match(event.request).then(response => response || fetch(event.request))
   );
 });
+
