@@ -27,8 +27,8 @@
             <div class="pin-section">
                 <h3>☁️ 클라우드 동기화</h3>
                 <div class="pin-input-group">
-                    <input type="tel" id="pinInput" class="pin-input" placeholder="PIN (4자리)" maxlength="4" pattern="[0-9]*" inputmode="numeric">
-                    <button class="pin-btn" onclick="app.loadFromCloud()">불러오기</button>
+                    <input type="tel" id="pinInput" class="pin-input" placeholder="PIN (4자리)" maxlength="4" inputmode="numeric">
+                    <button class="pin-btn" id="btnLoadCloud">불러오기</button>
                 </div>
                 <p class="pin-info">PIN을 입력하여 기기 간 데이터를 동기화하세요.</p>
             </div>
@@ -36,7 +36,7 @@
             <div class="form-grid">
                 <div class="input-group">
                     <label>통신망</label>
-                    <select id="network" onchange="app.updateMVNOList()">
+                    <select id="network">
                         <option value="">선택</option>
                         <option value="SKT">SKT</option>
                         <option value="KT">KT</option>
@@ -69,7 +69,7 @@
                 </div>
                 <div class="input-group">
                     <label>월 요금 (원)</label>
-                    <input type="text" id="monthlyFee" placeholder="0" inputmode="numeric" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')">
+                    <input type="tel" id="monthlyFee" placeholder="0" inputmode="numeric">
                 </div>
             </div>
 
@@ -81,15 +81,15 @@
             <div class="input-group">
                 <label>첨부 파일 (이미지 자동 압축)</label>
                 <div class="file-input-wrapper">
-                    <input type="file" id="fileInput" accept="image/*" multiple onchange="app.handleFileSelect(event)">
+                    <input type="file" id="fileInput" accept="image/*" multiple>
                     <label for="fileInput" class="file-input-label">📸 이미지 추가</label>
                 </div>
                 <div id="filePreview" class="file-preview"></div>
             </div>
 
             <div class="button-group">
-                <button class="btn-save" onclick="app.saveData()">저장하기</button>
-                <button class="btn-reset" onclick="app.resetData()">초기화</button>
+                <button class="btn-save" id="btnSave">저장하기</button>
+                <button class="btn-reset" id="btnReset">초기화</button>
             </div>
             
             <div id="statusMsg" class="status-msg"></div>
@@ -98,7 +98,7 @@
         <div id="results" style="display: none;">
             <div class="result-header">
                 <h2>내 요금제 현황</h2>
-                <button onclick="app.showInputForm()" class="edit-btn">수정</button>
+                <button id="btnEdit" class="edit-btn">수정</button>
             </div>
 
             <div class="summary-card">
