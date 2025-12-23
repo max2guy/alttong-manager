@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#667eea">
+    <meta name="description" content="알뜰폰 요금제 관리 및 해지일 알림 앱">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="알뜰폰 매니저">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
+    <title>알뜰폰 관리 알리미</title>
+    <link rel="manifest" href="./manifest.json">
+    <link rel="stylesheet" href="./style.css">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>📱</text></svg>">
+</head>
+<body>
+    <div class="container">
+        <header class="app-header">
+            <h1>📱 알뜰폰 관리</h1>
+            <button id="installBtn" class="install-btn" style="display: none;">앱 설치</button>
+        </header>
+
+        <div id="inputSection">
+            <div class="pin-section">
+                <h3>☁️ 클라우드 동기화</h3>
+                <div class="pin-input-group">
+                    <input type="tel" id="pinInput" class="pin-input" placeholder="PIN (4자리)" maxlength="4" pattern="[0-9]*" inputmode="numeric">
+                    <button class="pin-btn" onclick="app.loadFromCloud()">불러오기</button>
+                </div>
+                <p class="pin-info">PIN을 입력하여 기기 간 데이터를 동기화하세요.</p>
+            </div>
+
+            <div class="form-grid">
+                <div class="input-group">
+                    <label>통신망</label>
+                    <select id="network" onchange="app.updateMVNOList()">
+                        <option value="">선택</option>
+                        <option value="SKT">SKT</option>
+                        <option value="KT">KT</option>
+                        <option value="LGU">LG U+</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>통신사(MVNO)</label>
+                    <select id="mvnoProvider" disabled>
+                        <option value="">통신망 선택 필요</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label>요금제명</label>
+                <input type="text" id="planName" placeholder="예: 7GB+1Mbps">
+            </div>
+
+            <div class="input-group">
+                <label>가입일</label>
+                <input type="date" id="startDate">
+            </div>
+
+            <div class="form-grid">
+                <div class="input-group">
+                    <label>할인 기간 (개월)</label>
+                    <input type="number" id="discountMonths" placeholder="7" min="0" inputmode="numeric">
+                </div>
+                <div class="input-group">
+                    <label>월 요금 (원)</label>
+                    <input type="text" id="monthlyFee" placeholder="0" inputmode="numeric" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>상세 정보 / 혜택</label>
+                <textarea id="planDetails" placeholder="제공량, 사은품 등 메모"></textarea>
+            </div>
+
+            <div class="input-group">
+                <label>첨부 파일 (이미지 자동 압축)</label>
+                <div class="file-input-wrapper">
+                    <input type="file" id="fileInput" accept="image/*" multiple onchange="app.handleFileSelect(event)">
+                    <label for="fileInput" class="file-input-label">📸 이미지 추가</label>
+                </div>
+                <div id="filePreview" class="file-preview"></div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-save" onclick="app.saveData()">저장하기</button>
+                <button class="btn-reset" onclick="app.resetData()">초기화</button>
+            </div>
+            
+            <div id="statusMsg" class="status-msg"></div>
+        </div>
+
+        <div id="results" style="display: none;">
+            <div class="result-header">
+                <h2>내 요금제 현황</h2>
+                <button onclick="app.showInputForm()" class="edit-btn">수정</button>
+            </div>
+
+            <div class="summary-card">
+                <div class="card-top">
+                    <span id="summaryNetwork" class="badge">-</span>
+                    <span id="summaryMVNO" class="provider-name">-</span>
+                </div>
+                <div class="plan-title" id="summaryPlanName">-</div>
+                
+                <div class="d-day-container">
+                    <span class="d-day-label">할인 종료까지</span>
+                    <div id="daysRemaining" class="d-day-text">-</div>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-row">
+                        <span>가입일</span>
+                        <span id="summaryStartDate">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span>종료 예정</span>
+                        <span id="summaryEndDate" style="color: #ffeb3b; font-weight: bold;">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span>월 요금</span>
+                        <span id="summaryFee">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="alertBox" class="alert-box"></div>
+
+            <div class="detail-section">
+                <h4>📝 상세 메모</h4>
+                <div id="detailDisplay" class="detail-content"></div>
+            </div>
+            
+            <div id="savedFilesDisplay" class="gallery-grid"></div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="./app.js"></script>
+</body>
+</html>
