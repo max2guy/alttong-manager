@@ -1,4 +1,4 @@
-const APP_VERSION = '6.0';
+const APP_VERSION = '6.2';
 
 const firebaseConfig = {
     apiKey: "AIzaSyDpilSKN7l7ubKTyrIEdmK_ukA_TpgWNP8",
@@ -312,3 +312,4 @@ const app = {
 };
 
 window.addEventListener('DOMContentLoaded', () => app.init());
+
