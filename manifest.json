@@ -1,6 +1,6 @@
 {
   "name": "알뜰폰 매니저",
-  "short_name": "알뜰폰",
+  "short_name": "알뜰폰 매니저",
   "id": "/alttong-manager/",
   "start_url": "./index.html",
   "display": "standalone",
