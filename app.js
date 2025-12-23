@@ -1,5 +1,5 @@
-// ★ [중요] 앱 버전 5.1
-const APP_VERSION = '5.1';
+// ★ 버전을 6.1로 변경
+const APP_VERSION = '6.1';
 
 const firebaseConfig = {
     apiKey: "AIzaSyDpilSKN7l7ubKTyrIEdmK_ukA_TpgWNP8",
@@ -408,3 +408,4 @@ const app = {
 window.addEventListener('DOMContentLoaded', () => {
     app.init();
 });
+
