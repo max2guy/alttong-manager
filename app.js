@@ -1,3 +1,6 @@
+// ★ [중요] 앱 버전 5.0
+const APP_VERSION = '5.0';
+
 const firebaseConfig = {
     apiKey: "AIzaSyDpilSKN7l7ubKTyrIEdmK_ukA_TpgWNP8",
     authDomain: "alttong-manager-v2.firebaseapp.com",
@@ -9,6 +12,7 @@ const firebaseConfig = {
     measurementId: "G-N3NJQ7H75T"
 };
 
+// [전체 목록 유지]
 const mvnoList = {
     SKT: [
         'SK세븐모바일', '헬로모바일', '프리티', '스마텔', '티플러스', '리브모바일', '토스모바일',
@@ -38,31 +42,24 @@ const app = {
     deferredPrompt: null,
 
     init: function() {
-        console.log('App Initializing...');
+        console.log('App Initializing... v' + APP_VERSION);
         
-        // 1. Firebase 초기화
+        // 화면에 버전 표시
+        document.querySelectorAll('.app-version').forEach(el => el.innerText = APP_VERSION);
+
         try {
             firebase.initializeApp(firebaseConfig);
             this.db = firebase.database();
-            console.log('Firebase Init Success');
         } catch (e) { console.error('Firebase Error', e); }
 
-        // 2. 이벤트 리스너 연결
         this.addEventListeners();
-
-        // 3. 데이터 로드
         this.loadLocalData();
         
-        // 4. 날짜 기본값 설정
         const dateInput = document.getElementById('startDate');
-        if(dateInput && !dateInput.value) {
-            dateInput.valueAsDate = new Date();
-        }
+        if(dateInput && !dateInput.value) dateInput.valueAsDate = new Date();
 
-        // 5. 알림 권한 요청 (앱 실행 시 자동 확인)
         this.checkNotificationPermission();
 
-        // 6. PWA 설치 프롬프트
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             this.deferredPrompt = e;
@@ -81,28 +78,46 @@ const app = {
     },
 
     addEventListeners: function() {
-        // 통신망 변경 시 MVNO 목록 업데이트
+        // 강제 새로고침
+        document.getElementById('btnHardRefresh')?.addEventListener('click', () => this.hardRefresh());
+
         const networkSelect = document.getElementById('network');
-        if (networkSelect) {
-            networkSelect.addEventListener('change', () => this.updateMVNOList());
-        }
+        if (networkSelect) networkSelect.addEventListener('change', () => this.updateMVNOList());
         
-        // 파일 선택
         const fileInput = document.getElementById('fileInput');
-        if (fileInput) {
-            fileInput.addEventListener('change', (e) => this.handleFileSelect(e));
-        }
+        if (fileInput) fileInput.addEventListener('change', (e) => this.handleFileSelect(e));
         
-        // 버튼 연결
         document.getElementById('btnLoadCloud')?.addEventListener('click', () => this.loadFromCloud());
         document.getElementById('btnSave')?.addEventListener('click', () => this.saveData());
         document.getElementById('btnReset')?.addEventListener('click', () => this.resetData());
         document.getElementById('btnEdit')?.addEventListener('click', () => this.showInputForm());
         
-        // 월 요금 숫자만 입력
         document.getElementById('monthlyFee')?.addEventListener('input', (e) => {
             e.target.value = e.target.value.replace(/[^0-9]/g,'');
         });
+    },
+
+    hardRefresh: async function() {
+        if(!confirm(`현재 버전(v${APP_VERSION})을 새로고침 하시겠습니까?\n(캐시를 삭제하고 다시 로드합니다)`)) return;
+
+        this.showStatus('🔄 업데이트 중...');
+
+        try {
+            if ('serviceWorker' in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                for (let registration of registrations) {
+                    await registration.unregister();
+                }
+            }
+            if ('caches' in window) {
+                const keys = await caches.keys();
+                await Promise.all(keys.map(key => caches.delete(key)));
+            }
+            window.location.reload(true);
+        } catch(e) {
+            console.error(e);
+            window.location.reload();
+        }
     },
 
     updateMVNOList: function() {
@@ -140,12 +155,10 @@ const app = {
                     const MAX_WIDTH = 800;
                     let width = img.width;
                     let height = img.height;
-
                     if (width > MAX_WIDTH) {
                         height *= MAX_WIDTH / width;
                         width = MAX_WIDTH;
                     }
-
                     canvas.width = width;
                     canvas.height = height;
                     const ctx = canvas.getContext('2d');
@@ -159,14 +172,11 @@ const app = {
     handleFileSelect: async function(e) {
         const files = Array.from(e.target.files);
         const preview = document.getElementById('filePreview');
-        
         this.showStatus('이미지 압축 중...');
-
         for (let file of files) {
             if (file.type.startsWith('image/')) {
                 const compressedData = await this.compressImage(file);
                 this.attachedFiles.push(compressedData);
-                
                 const img = document.createElement('img');
                 img.src = compressedData;
                 img.className = 'preview-thumb';
@@ -208,20 +218,18 @@ const app = {
                 this.showStatus('✅ 로컬 및 클라우드(PIN) 저장 완료!');
             } catch(e) {
                 this.showStatus('⚠️ 로컬 저장 완료 (클라우드 실패)');
-                console.error(e);
             }
         } else {
             this.showStatus('💾 로컬 저장 완료');
         }
         
         this.renderResult(data);
-        this.checkAndNotify(data); // 저장 후 알림 체크
+        this.checkAndNotify(data);
     },
 
     loadFromCloud: async function() {
         const pin = document.getElementById('pinInput').value;
         if (!pin || pin.length !== 4) return alert('4자리 PIN을 입력하세요');
-        
         try {
             this.showStatus('데이터 찾는 중...');
             const snap = await this.db.ref('users/' + pin).once('value');
@@ -230,7 +238,7 @@ const app = {
                 this.fillForm(data);
                 this.showStatus('☁️ 클라우드에서 불러옴');
                 this.renderResult(data);
-                this.checkAndNotify(data); // 불러온 후 알림 체크
+                this.checkAndNotify(data);
             } else {
                 alert('저장된 데이터가 없습니다.');
                 this.showStatus('');
@@ -248,10 +256,8 @@ const app = {
                 const data = JSON.parse(local);
                 this.fillForm(data);
                 this.renderResult(data);
-                setTimeout(() => this.checkAndNotify(data), 1000); // 1초 뒤 알림 체크
-            } catch(e) {
-                console.error('Local Data Error', e);
-            }
+                setTimeout(() => this.checkAndNotify(data), 1000);
+            } catch(e) { console.error('Local Data Error', e); }
         } else {
             this.showInputForm();
         }
@@ -260,9 +266,8 @@ const app = {
     fillForm: function(data) {
         if(data.network) {
             document.getElementById('network').value = data.network;
-            this.updateMVNOList(); // 목록 갱신 먼저 수행
+            this.updateMVNOList();
         }
-        
         document.getElementById('mvnoProvider').value = data.mvnoProvider || '';
         document.getElementById('planName').value = data.planName || '';
         document.getElementById('startDate').value = data.startDate || '';
@@ -283,7 +288,6 @@ const app = {
 
     renderResult: function(data) {
         if(!data.startDate) return;
-
         document.getElementById('inputSection').style.display = 'none';
         document.getElementById('results').style.display = 'block';
 
@@ -291,7 +295,6 @@ const app = {
         const months = parseInt(data.discountMonths) || 0;
         const end = new Date(start);
         end.setMonth(start.getMonth() + months);
-        
         const today = new Date();
         today.setHours(0,0,0,0);
         const diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
@@ -323,7 +326,6 @@ const app = {
                 alertBox.style.display = 'none';
             }
         }
-
         document.getElementById('detailDisplay').innerText = data.planDetails || '메모 없음';
         
         const gallery = document.getElementById('savedFilesDisplay');
@@ -341,74 +343,44 @@ const app = {
         }
     },
 
-    // ★ [추가된 기능] 알림 권한 확인
     checkNotificationPermission: function() {
-        if (!("Notification" in window)) {
-            console.log("이 브라우저는 알림을 지원하지 않습니다.");
-            return;
-        }
-
+        if (!("Notification" in window)) return;
         if (Notification.permission !== "denied" && Notification.permission !== "granted") {
-            // 권한이 없으면 요청
             Notification.requestPermission();
         }
     },
 
-    // ★ [추가된 기능] 날짜 체크 및 알림 발송
     checkAndNotify: function(data) {
-        if (!("Notification" in window) || Notification.permission !== "granted" || !data.startDate) {
-            return;
-        }
+        if (!("Notification" in window) || Notification.permission !== "granted" || !data.startDate) return;
 
         const start = new Date(data.startDate);
         const months = parseInt(data.discountMonths) || 0;
         const end = new Date(start);
         end.setMonth(start.getMonth() + months);
-        
         const today = new Date();
         today.setHours(0,0,0,0);
         const diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
 
-        // 알림 메시지 설정
         let title = "알뜰폰 관리 알리미";
         let body = "";
-
-        // 이미 하루에 한 번 알림을 보냈는지 확인 (로컬스토리지 사용)
         const lastNotified = localStorage.getItem('lastNotificationDate');
         const todayStr = today.toISOString().split('T')[0];
 
-        if (lastNotified === todayStr) {
-            console.log('오늘 이미 알림을 보냈습니다.');
-            return;
-        }
+        if (lastNotified === todayStr) return;
 
-        if (diff < 0) {
-            body = `⚠️ 할인 기간이 지났습니다! (D+${Math.abs(diff)}) 지금 바로 확인하세요.`;
-        } else if (diff === 0) {
-            body = "🚨 오늘이 할인 종료일입니다! 해지나 이동을 서두르세요!";
-        } else if (diff <= 7) {
-            body = `⚡ 종료까지 ${diff}일 남았습니다. 다음 통신사를 알아볼 때입니다!`;
-        } else if (diff <= 30 && diff % 10 === 0) { // 30일, 20일, 10일에만 알림
-            body = `📅 할인이 ${diff}일 뒤에 종료됩니다. 일정을 확인하세요.`;
-        }
+        if (diff < 0) body = `⚠️ 할인 기간이 지났습니다! (D+${Math.abs(diff)}) 지금 바로 확인하세요.`;
+        else if (diff === 0) body = "🚨 오늘이 할인 종료일입니다! 해지나 이동을 서두르세요!";
+        else if (diff <= 7) body = `⚡ 종료까지 ${diff}일 남았습니다. 다음 통신사를 알아볼 때입니다!`;
+        else if (diff <= 30 && diff % 10 === 0) body = `📅 할인이 ${diff}일 뒤에 종료됩니다. 일정을 확인하세요.`;
 
-        // 알림 발송
         if (body) {
             if (navigator.serviceWorker && navigator.serviceWorker.controller) {
                 navigator.serviceWorker.ready.then(registration => {
-                    registration.showNotification(title, {
-                        body: body,
-                        icon: 'icon-192.png',
-                        vibrate: [200, 100, 200]
-                    });
+                    registration.showNotification(title, { body: body, icon: 'icon-192.png', vibrate: [200, 100, 200] });
                 });
             } else {
-                new Notification(title, {
-                    body: body,
-                    icon: 'icon-192.png'
-                });
+                new Notification(title, { body: body, icon: 'icon-192.png' });
             }
-            // 알림 보낸 날짜 저장 (중복 방지)
             localStorage.setItem('lastNotificationDate', todayStr);
         }
     },
@@ -421,7 +393,7 @@ const app = {
     resetData: function() {
         if(confirm('데이터를 초기화할까요?')) {
             localStorage.removeItem('alttongData');
-            localStorage.removeItem('lastNotificationDate'); // 알림 기록도 초기화
+            localStorage.removeItem('lastNotificationDate');
             location.reload();
         }
     },
