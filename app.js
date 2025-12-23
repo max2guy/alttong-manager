@@ -9,7 +9,6 @@ const firebaseConfig = {
     measurementId: "G-N3NJQ7H75T"
 };
 
-// ★ 여기에 전체 목록을 다시 채워 넣었습니다 ★
 const mvnoList = {
     SKT: [
         'SK세븐모바일', '헬로모바일', '프리티', '스마텔', '티플러스', '리브모바일', '토스모바일',
@@ -60,7 +59,10 @@ const app = {
             dateInput.valueAsDate = new Date();
         }
 
-        // 5. PWA 설치 프롬프트
+        // 5. 알림 권한 요청 (앱 실행 시 자동 확인)
+        this.checkNotificationPermission();
+
+        // 6. PWA 설치 프롬프트
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             this.deferredPrompt = e;
@@ -107,8 +109,6 @@ const app = {
         const net = document.getElementById('network').value;
         const select = document.getElementById('mvnoProvider');
         
-        console.log('Network changed to:', net); 
-
         select.innerHTML = '<option value="">선택하세요</option>';
         
         if (!net) {
@@ -215,6 +215,7 @@ const app = {
         }
         
         this.renderResult(data);
+        this.checkAndNotify(data); // 저장 후 알림 체크
     },
 
     loadFromCloud: async function() {
@@ -229,6 +230,7 @@ const app = {
                 this.fillForm(data);
                 this.showStatus('☁️ 클라우드에서 불러옴');
                 this.renderResult(data);
+                this.checkAndNotify(data); // 불러온 후 알림 체크
             } else {
                 alert('저장된 데이터가 없습니다.');
                 this.showStatus('');
@@ -246,6 +248,7 @@ const app = {
                 const data = JSON.parse(local);
                 this.fillForm(data);
                 this.renderResult(data);
+                setTimeout(() => this.checkAndNotify(data), 1000); // 1초 뒤 알림 체크
             } catch(e) {
                 console.error('Local Data Error', e);
             }
@@ -338,6 +341,78 @@ const app = {
         }
     },
 
+    // ★ [추가된 기능] 알림 권한 확인
+    checkNotificationPermission: function() {
+        if (!("Notification" in window)) {
+            console.log("이 브라우저는 알림을 지원하지 않습니다.");
+            return;
+        }
+
+        if (Notification.permission !== "denied" && Notification.permission !== "granted") {
+            // 권한이 없으면 요청
+            Notification.requestPermission();
+        }
+    },
+
+    // ★ [추가된 기능] 날짜 체크 및 알림 발송
+    checkAndNotify: function(data) {
+        if (!("Notification" in window) || Notification.permission !== "granted" || !data.startDate) {
+            return;
+        }
+
+        const start = new Date(data.startDate);
+        const months = parseInt(data.discountMonths) || 0;
+        const end = new Date(start);
+        end.setMonth(start.getMonth() + months);
+        
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        const diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
+
+        // 알림 메시지 설정
+        let title = "알뜰폰 관리 알리미";
+        let body = "";
+
+        // 이미 하루에 한 번 알림을 보냈는지 확인 (로컬스토리지 사용)
+        const lastNotified = localStorage.getItem('lastNotificationDate');
+        const todayStr = today.toISOString().split('T')[0];
+
+        if (lastNotified === todayStr) {
+            console.log('오늘 이미 알림을 보냈습니다.');
+            return;
+        }
+
+        if (diff < 0) {
+            body = `⚠️ 할인 기간이 지났습니다! (D+${Math.abs(diff)}) 지금 바로 확인하세요.`;
+        } else if (diff === 0) {
+            body = "🚨 오늘이 할인 종료일입니다! 해지나 이동을 서두르세요!";
+        } else if (diff <= 7) {
+            body = `⚡ 종료까지 ${diff}일 남았습니다. 다음 통신사를 알아볼 때입니다!`;
+        } else if (diff <= 30 && diff % 10 === 0) { // 30일, 20일, 10일에만 알림
+            body = `📅 할인이 ${diff}일 뒤에 종료됩니다. 일정을 확인하세요.`;
+        }
+
+        // 알림 발송
+        if (body) {
+            if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+                navigator.serviceWorker.ready.then(registration => {
+                    registration.showNotification(title, {
+                        body: body,
+                        icon: 'icon-192.png',
+                        vibrate: [200, 100, 200]
+                    });
+                });
+            } else {
+                new Notification(title, {
+                    body: body,
+                    icon: 'icon-192.png'
+                });
+            }
+            // 알림 보낸 날짜 저장 (중복 방지)
+            localStorage.setItem('lastNotificationDate', todayStr);
+        }
+    },
+
     showInputForm: function() {
         document.getElementById('inputSection').style.display = 'block';
         document.getElementById('results').style.display = 'none';
@@ -346,6 +421,7 @@ const app = {
     resetData: function() {
         if(confirm('데이터를 초기화할까요?')) {
             localStorage.removeItem('alttongData');
+            localStorage.removeItem('lastNotificationDate'); // 알림 기록도 초기화
             location.reload();
         }
     },
@@ -359,7 +435,6 @@ const app = {
     }
 };
 
-// DOM이 완전히 로드된 후 실행
 window.addEventListener('DOMContentLoaded', () => {
     app.init();
 });
