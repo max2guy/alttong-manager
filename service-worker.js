@@ -1,5 +1,5 @@
-// ★ 캐시 이름 v5.1
-const CACHE_NAME = 'alttong-v5.1'; 
+// ★ 캐시 이름 v6.1
+const CACHE_NAME = 'alttong-v6.1';
 
 const ASSETS = [
   './',
@@ -36,3 +36,4 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
