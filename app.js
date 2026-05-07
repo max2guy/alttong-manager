@@ -105,13 +105,13 @@ const app = {
 
     updateMVNOList() {
         const select = document.getElementById('mvnoProvider');
-        select.innerHTML = '<option value="">선택하세요</option>';
         if (!this.selectedNetwork) {
             select.disabled = true;
             select.innerHTML = '<option value="">통신망을 선택하세요</option>';
             return;
         }
         select.disabled = false;
+        select.innerHTML = '<option value="">선택하세요</option>';
         (mvnoList[this.selectedNetwork] || []).forEach(name => {
             const opt = document.createElement('option');
             opt.value = name;
