@@ -1,10 +1,10 @@
-const CACHE_NAME = 'v7.1';
+const CACHE_NAME = 'v7.2';
 const ASSETS = [
   './',
-  './index.html?v=7.0',
-  './style.css?v=7.0',
-  './app.js?v=7.0',
-  './manifest.json?v=7.0',
+  './index.html?v=7.1',
+  './style.css?v=7.1',
+  './app.js?v=7.1',
+  './manifest.json?v=7.1',
   'https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js',
   'https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js'
 ];
