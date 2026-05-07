@@ -313,6 +313,7 @@ const app = {
         const elapsed = Math.ceil((today - start) / (1000 * 60 * 60 * 24));
         const pct = totalDays > 0 ? Math.min(100, Math.max(0, Math.round(elapsed / totalDays * 100))) : 0;
         document.getElementById('progressFill').style.width = pct + '%';
+        document.getElementById('progressPct').innerText = pct + '%';
         document.getElementById('progressStart').innerText = data.startDate;
         document.getElementById('progressEnd').innerText = end.toISOString().split('T')[0];
 

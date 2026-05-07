@@ -161,6 +161,10 @@ button:active { transform: scale(0.98); }
     opacity: 0.75;
     margin-top: 3px;
 }
+.progress-pct {
+    font-weight: 700;
+    opacity: 1;
+}
 
 /* PIN 슬라이드 패널 (A) */
 .pin-panel {
