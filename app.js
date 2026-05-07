@@ -1,4 +1,4 @@
-const APP_VERSION = '6.2';
+const APP_VERSION = '7.0';
 
 const firebaseConfig = {
     apiKey: "AIzaSyDpilSKN7l7ubKTyrIEdmK_ukA_TpgWNP8",
@@ -21,8 +21,9 @@ const app = {
     db: null,
     attachedFiles: [],
     deferredPrompt: null,
+    selectedNetwork: '',
 
-    init: function() {
+    init() {
         document.querySelectorAll('.app-version').forEach(el => el.innerText = APP_VERSION);
         try {
             firebase.initializeApp(firebaseConfig);
@@ -31,9 +32,9 @@ const app = {
 
         this.addEventListeners();
         this.loadLocalData();
-        
+
         const dateInput = document.getElementById('startDate');
-        if(dateInput && !dateInput.value) dateInput.valueAsDate = new Date();
+        if (dateInput && !dateInput.value) dateInput.valueAsDate = new Date();
 
         this.checkNotificationPermission();
 
@@ -41,7 +42,7 @@ const app = {
             e.preventDefault();
             this.deferredPrompt = e;
             const btn = document.getElementById('installBtn');
-            if(btn) {
+            if (btn) {
                 btn.style.display = 'block';
                 btn.addEventListener('click', () => {
                     this.deferredPrompt.prompt();
@@ -54,56 +55,72 @@ const app = {
         });
     },
 
-    addEventListeners: function() {
+    addEventListeners() {
         document.getElementById('btnHardRefresh')?.addEventListener('click', () => this.hardRefresh());
-        document.getElementById('network')?.addEventListener('change', () => this.updateMVNOList());
+        document.getElementById('btnCloudToggle')?.addEventListener('click', () => this.togglePinPanel());
+
+        document.querySelectorAll('.network-tab').forEach(btn => {
+            btn.addEventListener('click', () => {
+                this.selectedNetwork = btn.dataset.net;
+                document.querySelectorAll('.network-tab').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.updateMVNOList();
+            });
+        });
+
+        document.getElementById('btnToday')?.addEventListener('click', () => {
+            document.getElementById('startDate').valueAsDate = new Date();
+        });
+
         document.getElementById('fileInput')?.addEventListener('change', (e) => this.handleFileSelect(e));
         document.getElementById('btnLoadCloud')?.addEventListener('click', () => this.loadFromCloud());
         document.getElementById('btnSave')?.addEventListener('click', () => this.saveData());
         document.getElementById('btnReset')?.addEventListener('click', () => this.resetData());
         document.getElementById('btnEdit')?.addEventListener('click', () => this.showInputForm());
         document.getElementById('monthlyFee')?.addEventListener('input', (e) => {
-            e.target.value = e.target.value.replace(/[^0-9]/g,'');
+            e.target.value = e.target.value.replace(/[^0-9]/g, '');
         });
     },
 
-    hardRefresh: async function() {
-        if(!confirm(`앱을 초기화하고 업데이트 하시겠습니까?\n(오류 해결을 위해 모든 캐시를 삭제합니다)`)) return;
+    togglePinPanel() {
+        const panel = document.getElementById('pinPanel');
+        if (panel) panel.classList.toggle('open');
+    },
+
+    hardRefresh: async function () {
+        if (!confirm(`앱을 초기화하고 업데이트 하시겠습니까?\n(오류 해결을 위해 모든 캐시를 삭제합니다)`)) return;
         this.showStatus('🔄 초기화 중...');
         try {
             if ('serviceWorker' in navigator) {
                 const registrations = await navigator.serviceWorker.getRegistrations();
-                for (let registration of registrations) await registration.unregister();
+                for (let r of registrations) await r.unregister();
             }
             if ('caches' in window) {
                 const keys = await caches.keys();
-                await Promise.all(keys.map(key => caches.delete(key)));
+                await Promise.all(keys.map(k => caches.delete(k)));
             }
             window.location.reload(true);
-        } catch(e) { window.location.reload(); }
+        } catch (e) { window.location.reload(); }
     },
 
-    updateMVNOList: function() {
-        const net = document.getElementById('network').value;
+    updateMVNOList() {
         const select = document.getElementById('mvnoProvider');
         select.innerHTML = '<option value="">선택하세요</option>';
-        if (!net) {
+        if (!this.selectedNetwork) {
             select.disabled = true;
-            select.innerHTML = '<option value="">통신망 선택 필요</option>';
+            select.innerHTML = '<option value="">통신망을 선택하세요</option>';
             return;
         }
         select.disabled = false;
-        if (mvnoList[net]) {
-            mvnoList[net].forEach(name => {
-                const opt = document.createElement('option');
-                opt.value = name;
-                opt.innerText = name;
-                select.appendChild(opt);
-            });
-        }
+        (mvnoList[this.selectedNetwork] || []).forEach(name => {
+            const opt = document.createElement('option');
+            opt.value = name;
+            opt.innerText = name;
+            select.appendChild(opt);
+        });
     },
 
-    compressImage: function(file) {
+    compressImage(file) {
         return new Promise((resolve) => {
             const reader = new FileReader();
             reader.readAsDataURL(file);
@@ -113,36 +130,30 @@ const app = {
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
                     const MAX_WIDTH = 800;
-                    let width = img.width;
-                    let height = img.height;
-                    if (width > MAX_WIDTH) {
-                        height *= MAX_WIDTH / width;
-                        width = MAX_WIDTH;
-                    }
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
+                    let width = img.width, height = img.height;
+                    if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                    canvas.width = width; canvas.height = height;
+                    canvas.getContext('2d').drawImage(img, 0, 0, width, height);
                     resolve(canvas.toDataURL('image/jpeg', 0.7));
                 };
             };
         });
     },
 
-    handleFileSelect: async function(e) {
+    handleFileSelect: async function (e) {
         const files = Array.from(e.target.files);
         const preview = document.getElementById('filePreview');
         this.showStatus('이미지 처리 중...');
         for (let file of files) {
             if (file.type.startsWith('image/')) {
-                const compressedData = await this.compressImage(file);
-                this.attachedFiles.push(compressedData);
+                const compressed = await this.compressImage(file);
+                this.attachedFiles.push(compressed);
                 const img = document.createElement('img');
-                img.src = compressedData;
+                img.src = compressed;
                 img.className = 'preview-thumb';
                 img.onclick = () => {
-                    if(confirm('삭제하시겠습니까?')) {
-                        this.attachedFiles = this.attachedFiles.filter(f => f !== compressedData);
+                    if (confirm('삭제하시겠습니까?')) {
+                        this.attachedFiles = this.attachedFiles.filter(f => f !== compressed);
                         img.remove();
                     }
                 };
@@ -152,11 +163,10 @@ const app = {
         this.showStatus('');
     },
 
-    saveData: async function() {
-        const network = document.getElementById('network').value;
-        if(!network) return alert('통신망을 선택해주세요.');
+    saveData: async function () {
+        if (!this.selectedNetwork) return alert('통신망을 선택해주세요.');
         const data = {
-            network: network,
+            network: this.selectedNetwork,
             mvnoProvider: document.getElementById('mvnoProvider').value,
             planName: document.getElementById('planName').value,
             startDate: document.getElementById('startDate').value,
@@ -173,13 +183,13 @@ const app = {
                 this.showStatus('☁️ 업로드 중...');
                 await this.db.ref('users/' + pin).set(data);
                 this.showStatus('✅ 저장 완료! (PIN: ' + pin + ')');
-            } catch(e) { this.showStatus('⚠️ 로컬 저장 완료 (클라우드 실패)'); }
+            } catch (e) { this.showStatus('⚠️ 로컬 저장 완료 (클라우드 실패)'); }
         } else { this.showStatus('💾 로컬 저장 완료'); }
         this.renderResult(data);
         this.checkAndNotify(data);
     },
 
-    loadFromCloud: async function() {
+    loadFromCloud: async function () {
         const pin = document.getElementById('pinInput').value;
         if (!pin || pin.length !== 4) return alert('4자리 PIN을 입력하세요');
         try {
@@ -192,10 +202,10 @@ const app = {
                 this.renderResult(data);
                 this.checkAndNotify(data);
             } else { alert('데이터가 없습니다.'); this.showStatus(''); }
-        } catch(e) { alert('오류: ' + e.message); this.showStatus(''); }
+        } catch (e) { alert('오류: ' + e.message); this.showStatus(''); }
     },
 
-    loadLocalData: function() {
+    loadLocalData() {
         const local = localStorage.getItem('alttongData');
         if (local) {
             try {
@@ -203,13 +213,16 @@ const app = {
                 this.fillForm(data);
                 this.renderResult(data);
                 setTimeout(() => this.checkAndNotify(data), 1000);
-            } catch(e) { console.error(e); }
+            } catch (e) { console.error(e); }
         } else { this.showInputForm(); }
     },
 
-    fillForm: function(data) {
-        if(data.network) {
-            document.getElementById('network').value = data.network;
+    fillForm(data) {
+        if (data.network) {
+            this.selectedNetwork = data.network;
+            document.querySelectorAll('.network-tab').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.net === data.network);
+            });
             this.updateMVNOList();
         }
         document.getElementById('mvnoProvider').value = data.mvnoProvider || '';
@@ -229,87 +242,110 @@ const app = {
         });
     },
 
-    renderResult: function(data) {
-        if(!data.startDate) return;
+    renderResult(data) {
+        if (!data.startDate) return;
         document.getElementById('inputSection').style.display = 'none';
         document.getElementById('results').style.display = 'block';
+
         const start = new Date(data.startDate);
         const months = parseInt(data.discountMonths) || 0;
         const end = new Date(start);
         end.setMonth(start.getMonth() + months);
         const today = new Date();
-        today.setHours(0,0,0,0);
+        today.setHours(0, 0, 0, 0);
         const diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
+
+        // 카드 상태 색상 (B)
+        const card = document.getElementById('summaryCard');
+        card.classList.remove('card-warn', 'card-danger');
+        if (diff < 0) card.classList.add('card-danger');
+        else if (diff <= 14) card.classList.add('card-warn');
+
         document.getElementById('summaryNetwork').innerText = data.network || '-';
         document.getElementById('summaryMVNO').innerText = data.mvnoProvider || '-';
         document.getElementById('summaryPlanName').innerText = data.planName || '-';
-        document.getElementById('summaryStartDate').innerText = data.startDate;
-        document.getElementById('summaryEndDate').innerText = end.toISOString().split('T')[0];
+
+        const fmt = d => d.toISOString().split('T')[0].slice(5);
+        document.getElementById('summaryStartDate').innerText = fmt(start);
+        document.getElementById('summaryEndDate').innerText = fmt(end);
         document.getElementById('summaryFee').innerText = parseInt(data.monthlyFee || 0).toLocaleString() + '원';
+
         const dDayEl = document.getElementById('daysRemaining');
+        dDayEl.innerText = diff < 0 ? `D+${Math.abs(diff)}` : `D-${diff}`;
+        dDayEl.style.color = diff < 0 ? '#fca5a5' : 'white';
+
+        // 진행 바 (D)
+        const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+        const elapsed = Math.ceil((today - start) / (1000 * 60 * 60 * 24));
+        const pct = totalDays > 0 ? Math.min(100, Math.max(0, Math.round(elapsed / totalDays * 100))) : 0;
+        document.getElementById('progressFill').style.width = pct + '%';
+        document.getElementById('progressStart').innerText = data.startDate;
+        document.getElementById('progressEnd').innerText = end.toISOString().split('T')[0];
+
         const alertBox = document.getElementById('alertBox');
         if (diff < 0) {
-            dDayEl.innerText = `D+${Math.abs(diff)}`; dDayEl.style.color = '#ff4757';
-            alertBox.style.display = 'block'; alertBox.className = 'alert-box alert-urgent'; alertBox.innerText = '⚠️ 기간 만료!';
+            alertBox.style.display = 'block'; alertBox.className = 'alert-box alert-urgent';
+            alertBox.innerText = '⚠️ 기간 만료!';
+        } else if (diff <= 14) {
+            alertBox.style.display = 'block'; alertBox.className = 'alert-box alert-warn';
+            alertBox.innerText = `⚡ 번호이동 준비하세요 (${diff}일 남음)`;
         } else {
-            dDayEl.innerText = `D-${diff}`; dDayEl.style.color = '#333';
-            if(diff <= 14) { alertBox.style.display = 'block'; alertBox.className = 'alert-box alert-warn'; alertBox.innerText = `⚡ 번호이동 준비하세요 (${diff}일 남음)`; }
-            else { alertBox.style.display = 'none'; }
+            alertBox.style.display = 'none';
         }
+
         document.getElementById('detailDisplay').innerText = data.planDetails || '메모 없음';
+
         const gallery = document.getElementById('savedFilesDisplay');
         gallery.innerHTML = '';
-        if(data.files) {
-            data.files.forEach(src => {
-                const img = document.createElement('img');
-                img.src = src;
-                img.onclick = () => { const w = window.open(""); w.document.write(`<img src="${src}" style="width:100%">`); };
-                gallery.appendChild(img);
-            });
-        }
+        (data.files || []).forEach(src => {
+            const img = document.createElement('img');
+            img.src = src;
+            img.onclick = () => { const w = window.open(''); w.document.write(`<img src="${src}" style="width:100%">`); };
+            gallery.appendChild(img);
+        });
     },
 
-    checkNotificationPermission: function() {
-        if (!("Notification" in window)) return;
-        if (Notification.permission !== "denied" && Notification.permission !== "granted") Notification.requestPermission();
+    checkNotificationPermission() {
+        if (!('Notification' in window)) return;
+        if (Notification.permission !== 'denied' && Notification.permission !== 'granted')
+            Notification.requestPermission();
     },
 
-    checkAndNotify: function(data) {
-        if (!("Notification" in window) || Notification.permission !== "granted" || !data.startDate) return;
+    checkAndNotify(data) {
+        if (!('Notification' in window) || Notification.permission !== 'granted' || !data.startDate) return;
         const start = new Date(data.startDate);
         const end = new Date(start);
-        end.setMonth(start.getMonth() + (parseInt(data.discountMonths)||0));
+        end.setMonth(start.getMonth() + (parseInt(data.discountMonths) || 0));
         const diff = Math.ceil((end - new Date()) / (1000 * 60 * 60 * 24));
-        const lastNotified = localStorage.getItem('lastNotificationDate');
         const todayStr = new Date().toISOString().split('T')[0];
-        if (lastNotified === todayStr) return;
-        let body = "";
+        if (localStorage.getItem('lastNotificationDate') === todayStr) return;
+        let body = '';
         if (diff < 0) body = `⚠️ 할인 기간이 지났습니다! (D+${Math.abs(diff)})`;
         else if (diff <= 7) body = `⚡ 종료까지 ${diff}일 남았습니다. 갈아타세요!`;
         if (body) {
-            if (navigator.serviceWorker && navigator.serviceWorker.controller) navigator.serviceWorker.ready.then(reg => reg.showNotification("알뜰폰 알림", { body: body, icon: 'icon-192.png' }));
-            else new Notification("알뜰폰 알림", { body: body, icon: 'icon-192.png' });
+            if (navigator.serviceWorker?.controller)
+                navigator.serviceWorker.ready.then(reg => reg.showNotification('알뜰폰 알림', { body, icon: 'icon-192.png' }));
+            else new Notification('알뜰폰 알림', { body, icon: 'icon-192.png' });
             localStorage.setItem('lastNotificationDate', todayStr);
         }
     },
 
-    showInputForm: function() {
+    showInputForm() {
         document.getElementById('inputSection').style.display = 'block';
         document.getElementById('results').style.display = 'none';
     },
 
-    resetData: function() {
-        if(confirm('초기화 하시겠습니까?')) {
+    resetData() {
+        if (confirm('초기화 하시겠습니까?')) {
             localStorage.removeItem('alttongData');
             location.reload();
         }
     },
 
-    showStatus: function(msg) {
+    showStatus(msg) {
         const el = document.getElementById('statusMsg');
-        if(el) { el.innerText = msg; setTimeout(() => el.innerText = '', 3000); }
+        if (el) { el.innerText = msg; if (msg) setTimeout(() => el.innerText = '', 3000); }
     }
 };
 
 window.addEventListener('DOMContentLoaded', () => app.init());
-
