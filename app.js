@@ -1,4 +1,4 @@
-const APP_VERSION = '7.1';
+const APP_VERSION = '7.2';
 
 const firebaseConfig = {
     apiKey: "AIzaSyDpilSKN7l7ubKTyrIEdmK_ukA_TpgWNP8",
