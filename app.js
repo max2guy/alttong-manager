@@ -272,7 +272,7 @@ const app = {
         if (!('setAppBadge' in navigator)) return;
         try {
             if (diff > 0) navigator.setAppBadge(diff);
-            else navigator.clearAppBadge?.();
+            else navigator.setAppBadge(0);
         } catch (e) {}
     },
 
