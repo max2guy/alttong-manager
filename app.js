@@ -54,6 +54,10 @@ const app = {
         this.addEventListeners();
         this.loadLocalData();
 
+        if (!localStorage.getItem('alttong_data')) {
+            navigator.clearAppBadge?.();
+        }
+
         const dateInput = document.getElementById('startDate');
         if (dateInput && !dateInput.value) dateInput.valueAsDate = new Date();
 
@@ -263,6 +267,15 @@ const app = {
         });
     },
 
+
+    updateBadge(diff) {
+        if (!('setAppBadge' in navigator)) return;
+        try {
+            if (diff > 0) navigator.setAppBadge(diff);
+            else navigator.clearAppBadge?.();
+        } catch (e) {}
+    },
+
     renderResult(data) {
         if (!data.startDate) return;
         document.getElementById('inputSection').style.display = 'none';
@@ -313,6 +326,8 @@ const app = {
         } else {
             alertBox.style.display = 'none';
         }
+
+        this.updateBadge(diff);
 
         document.getElementById('detailDisplay').innerText = data.planDetails || '메모 없음';
 
