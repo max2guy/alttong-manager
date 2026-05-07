@@ -178,13 +178,17 @@ button:active { transform: scale(0.98); }
 .header-icon-btn {
     background: none;
     border: none;
-    font-size: 1.2rem;
     cursor: pointer;
-    padding: 4px 6px;
+    padding: 6px;
     border-radius: 8px;
     transition: background 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
 }
-.header-icon-btn:hover { background: rgba(0,0,0,0.06); }
+.header-icon-btn:hover { background: rgba(0,0,0,0.06); color: #3b82f6; }
+.header-icon-btn svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .header-icons { display: flex; align-items: center; gap: 4px; }
 
 /* 통신망 탭 버튼 (C) */
