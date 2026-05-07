@@ -102,6 +102,22 @@ button:active { transform: scale(0.98); }
 
 .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; }
 .gallery-grid img { width: 100%; height: 80px; object-fit: cover; border-radius: 8px; cursor: pointer; }
+
+#lightboxOverlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.88);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+}
+#lightboxImg {
+    max-width: 95vw;
+    max-height: 90vh;
+    object-fit: contain;
+    border-radius: 8px;
+}
 .edit-btn { float: right; font-size: 0.9rem; padding: 5px 10px; background: #eee; border: none; border-radius: 5px; cursor: pointer; color: #555; }
 
 /* 카드 상태 변형 */
@@ -162,6 +178,7 @@ button:active { transform: scale(0.98); }
     margin-top: 3px;
 }
 .progress-pct {
+    font-size: 0.75rem;
     font-weight: 700;
     opacity: 1;
 }

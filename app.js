@@ -1,4 +1,4 @@
-const APP_VERSION = '7.2';
+const APP_VERSION = '7.3';
 
 const firebaseConfig = {
     apiKey: "AIzaSyDpilSKN7l7ubKTyrIEdmK_ukA_TpgWNP8",
@@ -337,9 +337,24 @@ const app = {
         (data.files || []).forEach(src => {
             const img = document.createElement('img');
             img.src = src;
-            img.onclick = () => { const w = window.open(''); w.document.write(`<img src="${src}" style="width:100%">`); };
+            img.onclick = () => this.openLightbox(src);
             gallery.appendChild(img);
         });
+    },
+
+    openLightbox(src) {
+        let overlay = document.getElementById('lightboxOverlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'lightboxOverlay';
+            overlay.onclick = () => overlay.style.display = 'none';
+            const img = document.createElement('img');
+            img.id = 'lightboxImg';
+            overlay.appendChild(img);
+            document.body.appendChild(overlay);
+        }
+        document.getElementById('lightboxImg').src = src;
+        overlay.style.display = 'flex';
     },
 
     checkNotificationPermission() {
