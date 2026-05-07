@@ -36,8 +36,8 @@ h1 { margin: 0; font-size: 1.4rem; color: var(--text); }
 
 /* PIN 섹션 */
 .pin-section {
-    background: #f0f4ff; padding: 15px; border-radius: 12px; margin-bottom: 20px;
-    border: 1px solid #dbeafe;
+    background: #eff6ff; padding: 15px; border-radius: 12px;
+    border: 1px solid #bfdbfe;
 }
 .pin-input-group { display: flex; gap: 8px; margin-bottom: 5px; }
 .pin-input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 8px; text-align: center; font-size: 1.1rem; letter-spacing: 2px; }
@@ -47,9 +47,9 @@ h1 { margin: 0; font-size: 1.4rem; color: var(--text); }
 /* 폼 요소 */
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .input-group { margin-bottom: 15px; }
-label { display: block; font-size: 0.9rem; color: #666; margin-bottom: 5px; font-weight: 600; }
+label { display: block; font-size: 0.9rem; color: var(--text-muted); margin-bottom: 5px; font-weight: 600; }
 input, select, textarea {
-    width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px;
+    width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px;
     font-size: 1rem; background: #fff;
 }
 input:focus, textarea:focus { border-color: var(--primary); outline: none; }
